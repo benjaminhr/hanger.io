@@ -77,6 +77,7 @@ func pause(w http.ResponseWriter, req *http.Request) {
 			broadcaster.Submit(maxRampUp)
 			sleepAndRespond(w, maxRampUp, "done")
 
+			pubsub.Unsubscribe()
 			mutex.Lock()
 			delete(hangers, hangID)
 			mutex.Unlock()
