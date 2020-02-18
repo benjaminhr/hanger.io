@@ -51,26 +51,25 @@ func pause(w http.ResponseWriter, req *http.Request) {
 
 	mutex.Lock()
 	broadcaster, exists := hangers[hangID]
-	mutex.Unlock()
 
 	if exists {
 		ch := make(chan interface{})
 		broadcaster.Register(ch)
 		defer broadcaster.Unregister(ch)
 
+		mutex.Unlock()
 		select {
 		case maxRampUp := <-ch:
 			sleepAndRespond(w, maxRampUp.(int), "done")
 		}
 		// maxRampUp := <-ch
 	} else {
-		mutex.Lock()
 		hangers[hangID] = broadcast.NewBroadcaster(10000)
-		mutex.Unlock()
 
 		broadcaster := hangers[hangID]
 		pubsub := redisClient.Subscribe(hangID)
 		ch := pubsub.Channel()
+		mutex.Unlock()
 
 		for msg := range ch {
 			maxRampUp, _ := strconv.Atoi(msg.Payload)
